@@ -2,4 +2,12 @@
   
   After creating the tables, I imported the data directly from the original csv files. Once the files were imported, I could manipulate the data to show only information that I needed to analyze. I struggled with importing the csv files becuase Macs require a different line of code. I put the data files in my computer's Public file and copied their indivoual file path to import them individually. This is an example: COPY departments FROM '/Users/hannahrim/Public/departments.csv' DELIMITER ',' CSV HEADER;
 
- By using SQL, I gathered the data for the client. I delivered a list of names of people who would be good candidates for the mentorship program. This helps Pewlett-Hackard by standardizing the process for the hiring department. 
+ The EmployeeDB.png file shows the relationship between various tables and how they keys were used to join tables. After oganizing the data by employee number, first name, last name, salary, and title, we only included those people born between 1952 and 1955. The duplicates were removed if workers' titles changed when they received promototions. This method was also applied to the mentor program as well.
+ 
+Titles and Retirees:
+ ![Alt text](https://github.com/hannahrim/Pewlett-Hackard-Analysis/blob/master/title_totals.png)
+ 
+ Titles and Mentors:
+ ![Alt text](https://github.com/hannahrim/Pewlett-Hackard-Analysis/blob/master/mentor_totals.png)
+ 
+ By using SQL, I gathered the data for the client. I delivered a list of names of people who would be good candidates for the mentorship program. This helps Pewlett-Hackard by standardizing the process for the hiring department since 30% of its workforce are at retirement age. Pewlett-Hackard needs to rapidly begin hiring new employees and restructure the company.
