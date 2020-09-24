@@ -1,64 +1,105 @@
---Challenge
---Number of [titles] retiring
-SELECT ce.emp_no,
-	ce.first_name,
-	ce.last_name,
-	ti.title,
-	ti.from_date,
-	ti.to_date
-INTO ret_titles
-FROM current_emp as ce
-	INNER JOIN titles as ti
-		ON (ce.emp_no=ti.emp_no)
-ORDER BY ce.emp_no;
-
-
---Partition the data to show only most recent title per employee
-SELECT emp_no,
-	first_name, 
-	last_name,
-	to_date,
-	title
-INTO unique_titles
-FROM (
-	SELECT emp_no,
-		first_name,
-		last_name, 
-		to_date,
-		title, ROW_NUMBER() OVER
-		(PARTITION BY (emp_no)
-		ORDER BY to_date DESC) rn
-		FROM ret_titles
-		) tmp WHERE rn=1
-ORDER BY emp_no;
-SELECT * FROM unique_titles;
-
-
---Counting the number of employees per title
-SELECT COUNT (title), title
-INTO retiring_titles
-FROM unique_titles
-GROUP BY title
-ORDER BY count DESC;
-
-SELECT * FROM retiring_titles;
-
---Creating a list of employees eligible for the mentorship program
+-- new table containing employee number, first name, last name, title, from_date, salary
 SELECT e.emp_no,
 	e.first_name,
 	e.last_name,
-	e.birth_date,
+	s.salary,
 	de.from_date,
-	de.to_date,
-	ti.title
-INTO mentorship
+    de.to_date,
+	titles.title
+INTO near_retirement
 FROM employees as e
-INNER JOIN dept_emp as de
-	ON (e.emp_no=de.emp_no)
-INNER JOIN titles as ti
-	ON (e.emp_no=ti.emp_no)
-WHERE (de.to_date='9999-01-01')
-AND (e.birth_date BETWEEN '1965-01-01' AND '1965-12-31')
-ORDER BY e.emp_no;
+	INNER JOIN salaries as s
+		ON (e.emp_no = s.emp_no)
+	INNER JOIN dept_emp as de
+		ON (e.emp_no = de.emp_no)
+	INNER JOIN titles
+		ON(e.emp_no = titles.emp_no )
+WHERE (e.birth_date BETWEEN '1952-01-01' AND '1955-12-31')
 
-SELECT * FROM mentorship;
+-- Partition the data to show only most recent title per employee
+SELECT emp_no,
+ 		first_name,
+ 		last_name,
+ 		salary,
+ 		title,
+		to_date
+INTO near_retirement_titles
+FROM
+(SELECT nr.emp_no,
+ 		nr.first_name,
+ 		nr.last_name,
+ 		nr.salary,
+ 		nr.title,
+ 		nr.to_date,
+  ROW_NUMBER() OVER
+ (PARTITION BY (nr.emp_no) ORDER BY nr.to_date DESC) rn
+ FROM near_retirement as nr
+  )tmp WHERE rn = 1
+ORDER BY emp_no;
+
+--get total number for each title. this shows retire numbers by title
+select count(emp_no), title
+into title_totals
+from near_retirement_titles
+group by title
+order by title;
+
+
+
+--employee number, firstname, lastname, title, fromdate, todate as requested for mentorship program
+select e.emp_no,
+		e.first_name,
+		e.last_name,
+		titles.title,
+		dept_emp.from_date,
+		dept_emp.to_date
+into mentor_program
+from employees as e
+inner join dept_emp
+	on(e.emp_no = dept_emp.emp_no)
+inner join titles
+	on(e.emp_no = titles.emp_no)
+where(birth_date between '1965-01-01' and '1965-12-31')
+		
+		
+--find duplicates
+SELECT
+  first_name,
+  last_name,
+  count(*)
+FROM mentor_program
+GROUP BY
+  first_name,
+  last_name
+HAVING count(*) > 1;
+
+
+-- Partition the data to remove duplicates 
+SELECT emp_no,
+ 		first_name,
+ 		last_name,
+ 		title,
+		to_date
+INTO mentor_program_2
+FROM
+(SELECT mp.emp_no,
+ 		mp.first_name,
+ 		mp.last_name,
+ 		mp.title,
+ 		mp.to_date,
+  ROW_NUMBER() OVER
+ (PARTITION BY (mp.emp_no) ORDER BY mp.to_date DESC) rn
+ FROM mentor_program as mp
+  )tmp WHERE rn = 1
+ORDER BY emp_no;
+
+--find duplicates if any 
+SELECT
+  first_name,
+  last_name,
+  count(*)
+FROM mentor_program_2
+GROUP BY
+  first_name,
+  last_name
+HAVING count(*) > 1;
